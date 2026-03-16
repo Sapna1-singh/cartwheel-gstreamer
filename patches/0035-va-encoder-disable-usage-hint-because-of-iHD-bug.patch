@@ -1,4 +1,4 @@
-From f3772aee6b89abc892f0a44e18309117a6d05784 Mon Sep 17 00:00:00 2001
+From 83d1bd3d6272d2c6fd890477a29336887ed324d1 Mon Sep 17 00:00:00 2001
 From: He Junyan <junyan.he@intel.com>
 Date: Tue, 26 Sep 2023 13:09:10 +0800
 Subject: [PATCH] va: encoder: disable usage hint because of iHD bug
@@ -12,49 +12,49 @@ fixed.
  2 files changed, 9 insertions(+), 6 deletions(-)
 
 diff --git a/subprojects/gst-plugins-bad/sys/va/gstvabaseenc.c b/subprojects/gst-plugins-bad/sys/va/gstvabaseenc.c
-index 336ad13a3b..1f71abc805 100644
+index cefa87dbfe..1bba5026c1 100644
 --- a/subprojects/gst-plugins-bad/sys/va/gstvabaseenc.c
 +++ b/subprojects/gst-plugins-bad/sys/va/gstvabaseenc.c
-@@ -223,8 +223,9 @@ _get_sinkpad_pool (GstElement * element, gpointer data)
+@@ -218,8 +218,9 @@ _get_sinkpad_pool (GstElement * element, gpointer data)
  
    allocator = gst_va_allocator_new (base->display, surface_formats);
  
 -  usage_hint = va_get_surface_usage_hint (base->display,
--      VAEntrypointEncSlice, GST_PAD_SINK, FALSE);
+-      klass->entrypoint, GST_PAD_SINK, FALSE);
 +  usage_hint = VA_SURFACE_ATTRIB_USAGE_HINT_GENERIC;
-+  /* va_get_surface_usage_hint (display,
-+     VAEntrypointEncSlice, GST_PAD_SINK, FALSE); */
++  /*usage_hint = va_get_surface_usage_hint (base->display,
++      klass->entrypoint, GST_PAD_SINK, FALSE);*/
  
    base->priv->raw_pool = gst_va_pool_new_with_config (caps, 1, 0, usage_hint,
        GST_VA_FEATURE_AUTO, allocator, &params);
-@@ -415,8 +416,9 @@ gst_va_base_enc_propose_allocation (GstVideoEncoder * venc, GstQuery * query)
+@@ -410,8 +411,9 @@ gst_va_base_enc_propose_allocation (GstVideoEncoder * venc, GstQuery * query)
    if (!caps)
      return FALSE;
  
 -  usage_hint = va_get_surface_usage_hint (base->display,
 -      VAEntrypointEncSlice, GST_PAD_SINK, gst_video_is_dma_drm_caps (caps));
 +  usage_hint = VA_SURFACE_ATTRIB_USAGE_HINT_GENERIC;
-+  /* va_get_surface_usage_hint (display,
-+     VAEntrypointEncSlice, GST_PAD_SINK, FALSE); */
++  /*usage_hint = va_get_surface_usage_hint (base->display,
++      VAEntrypointEncSlice, GST_PAD_SINK, gst_video_is_dma_drm_caps (caps));*/
  
    gst_allocation_params_init (&params);
  
 diff --git a/subprojects/gst-plugins-bad/sys/va/gstvaencoder.c b/subprojects/gst-plugins-bad/sys/va/gstvaencoder.c
-index 302a1d47cf..5aa39993f8 100644
+index 727ebfb219..9b7dfa3582 100644
 --- a/subprojects/gst-plugins-bad/sys/va/gstvaencoder.c
 +++ b/subprojects/gst-plugins-bad/sys/va/gstvaencoder.c
-@@ -314,8 +314,9 @@ _create_reconstruct_pool (GstVaDisplay * display, GArray * surface_formats,
+@@ -460,8 +460,9 @@ _get_reconstructed_buffer_pool (GstVaEncoder * self)
+     goto bail;
+   }
  
-   gst_video_info_set_format (&info, format, coded_width, coded_height);
- 
--  usage_hint = va_get_surface_usage_hint (display,
--      VAEntrypointEncSlice, GST_PAD_SINK, FALSE);
+-  usage_hint = va_get_surface_usage_hint (self->display, self->entrypoint,
+-      GST_PAD_SINK, FALSE);
 +  usage_hint = VA_SURFACE_ATTRIB_USAGE_HINT_GENERIC;
-+  /* va_get_surface_usage_hint (display,
-+     VAEntrypointEncSlice, GST_PAD_SINK, FALSE); */
++  /*usage_hint = va_get_surface_usage_hint (self->display, self->entrypoint,
++      GST_PAD_SINK, FALSE);*/
  
-   caps = gst_video_info_to_caps (&info);
-   gst_caps_set_features_simple (caps,
+   gst_allocation_params_init (&params);
+ 
 -- 
 2.34.1
 
